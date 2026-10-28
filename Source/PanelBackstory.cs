@@ -245,6 +245,7 @@ namespace EdB.PrepareCarefully {
                     this.ProviderBackstories.AllChildhookBackstories : this.ProviderBackstories.AllAdulthookBackstories;
             List<BackstoryDef> filteredBackstories = new List<BackstoryDef>(fullOptionsList.Count);
             DialogOptions<BackstoryDef> dialog = new DialogOptions<BackstoryDef>(filteredBackstories) {
+                EnableSearch = true,
                 NameFunc = (BackstoryDef backstory) => {
                     return backstory.TitleCapFor(pawn.gender);
                 },

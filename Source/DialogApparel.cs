@@ -35,6 +35,7 @@ namespace EdB.PrepareCarefully {
         public Rect AvailableApparelRect { get; private set; }
         public Rect AvailableApparelScrollRect { get; private set; }
         public Rect AvailableApparelFilterRect { get; private set; }
+        public Rect AvailableApparelSearchRect { get; private set; }
         public Rect PortraitRect { get; private set; }
         public Rect ScrollRect { get; private set; }
         public Rect CancelButtonRect { get; private set; }
@@ -58,6 +59,8 @@ namespace EdB.PrepareCarefully {
         private List<FloatMenuOption> ApparelLayerFloatMenuOptions = new List<FloatMenuOption>();
 
         private bool ApparelOptionsLoaded = false;
+        private string ApparelSearchText = "";
+        private QuickSearchWidget ApparelSearchWidget = new QuickSearchWidget();
         private EquipmentOption SelectedOption = null;
         private Apparel SelectedApparel = null;
         private ThingDef SelectedStuff = null;
@@ -137,7 +140,9 @@ namespace EdB.PrepareCarefully {
 
             float availableApparelWidth = ContentRect.width - ContentMargin.y - SelectedApparelRect.width;
             AvailableApparelRect = new Rect(0, 0, availableApparelWidth, ContentRect.height);
-            AvailableApparelFilterRect = new Rect(AvailableApparelRect.x, AvailableApparelRect.y, AvailableApparelRect.width, 24);
+            float searchWidth = Mathf.Min(210, AvailableApparelRect.width * 0.55f);
+            AvailableApparelFilterRect = new Rect(AvailableApparelRect.x, AvailableApparelRect.y, AvailableApparelRect.width - searchWidth - 8, 24);
+            AvailableApparelSearchRect = new Rect(AvailableApparelRect.xMax - searchWidth, AvailableApparelRect.y, searchWidth, 24);
             AvailableApparelScrollRect = new Rect(AvailableApparelRect.x, AvailableApparelFilterRect.yMax, AvailableApparelRect.width, AvailableApparelRect.height - AvailableApparelFilterRect.yMax);
 
             FooterRect = new Rect(ContentMargin.x, ContentRect.y + ContentSize.y + 20,
@@ -267,6 +272,9 @@ namespace EdB.PrepareCarefully {
             if (WidgetDropdown.SmallDropdown(AvailableApparelFilterRect, SelectedLayer?.LabelCap ?? "EdB.PC.Dialog.ManageApparel.AllLayers".Translate())) {
                 Find.WindowStack.Add(new FloatMenu(ApparelLayerFloatMenuOptions, null, false));
             }
+            ApparelSearchWidget.OnGUI(AvailableApparelSearchRect,
+                () => { ApparelSearchText = ApparelSearchWidget.filter.Text; ScrollViewAvailableApparel.ScrollToTop(); },
+                () => { ApparelSearchText = null; ScrollViewAvailableApparel.ScrollToTop(); });
 
             float rowHeight = 36;
             float lineHeight = 32;
@@ -280,7 +288,8 @@ namespace EdB.PrepareCarefully {
             ScrollViewAvailableApparel.Begin(AvailableApparelScrollRect);
             try {
                 Text.Anchor = TextAnchor.MiddleLeft;
-                foreach (EquipmentOption option in ApparelList.Where(e => SelectedLayer == null || e.ThingDef.apparel.layers.Contains(SelectedLayer))) {
+                foreach (EquipmentOption option in ApparelList.Where(e => (SelectedLayer == null || e.ThingDef.apparel.layers.Contains(SelectedLayer))
+                        && (string.IsNullOrWhiteSpace(ApparelSearchText) || e.ThingDef.LabelCap.ToString().IndexOf(ApparelSearchText, StringComparison.OrdinalIgnoreCase) >= 0))) {
                     if (SelectedOption == option) {
                         float topOfBox = y;
                         float scrollBoxTopPosition = ScrollViewAvailableApparel.Position.y;
