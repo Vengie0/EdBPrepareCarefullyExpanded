@@ -99,6 +99,7 @@ namespace EdB.PrepareCarefully {
                     Trait selectedTrait = originalTrait;
                     ComputeDisallowedTraits(customizedPawn, originalTrait);
                     DialogOptions<Trait> dialog = new DialogOptions<Trait>(ProviderTraits.Traits) {
+                        EnableSearch = true,
                         NameFunc = (Trait t) => {
                             return t.LabelCap;
                         },
@@ -211,6 +212,12 @@ namespace EdB.PrepareCarefully {
                     TraitsRandomized?.Invoke();
                 }
 
+            }
+
+            // Draw Rimpsyche's own edit button so its in-game personality editor, including its reset controls, can be opened here.
+            if (RimpsycheCompatibility.CanEdit(pawn)) {
+                Rect personalityEditRect = new Rect(Width - 83, top + 9, 22, 22);
+                RimpsycheCompatibility.DrawEditButton(personalityEditRect, pawn);
             }
 
             // Remove any traits that were marked for deletion

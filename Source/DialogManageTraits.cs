@@ -64,12 +64,16 @@ namespace EdB.PrepareCarefully {
         protected bool confirmed = false;
         protected WidgetTable<TraitOption> table;
         protected List<TraitOption> traitOptionList = new List<TraitOption>();
+        protected List<TraitOption> filteredTraitOptionList = new List<TraitOption>();
         protected CustomizedPawn customizedPawn = null;
         protected bool optionStateDirtyFlag = true;
         protected List<Implant> validImplants = new List<Implant>();
         protected string cachedBlockedSelectionAlert = null;
         protected ProviderTraits providerTraits = null;
         protected TipCache tipCache = new TipCache();
+        protected string searchText = "";
+        protected QuickSearchWidget searchWidget = new QuickSearchWidget();
+        protected Rect SearchRect;
         public List<Trait> originalTraits = new List<Trait>();
 
         public DialogManageTraits(ProviderTraits providerTraits) {
@@ -233,6 +237,8 @@ namespace EdB.PrepareCarefully {
 
             ContentRect = new Rect(ContentMargin.x, ContentMargin.y + headerSize, ContentSize.x, ContentSize.y);
 
+            SearchRect = new Rect(ContentRect.width - 220, 0, 210, 24);
+
             ScrollRect = new Rect(0, 0, ContentRect.width, ContentRect.height);
 
             HeaderRect = new Rect(ContentMargin.x, ContentMargin.y, ContentSize.x, HeaderHeight);
@@ -256,7 +262,7 @@ namespace EdB.PrepareCarefully {
             Vector2 nameSize = new Vector2(ContentRect.width - portraitSize.x - radioWidth, portraitSize.y * 0.5f);
 
             table = new WidgetTable<TraitOption>();
-            table.Rect = new Rect(Vector2.zero, ContentRect.size);
+            table.Rect = new Rect(0, 30, ContentRect.width, ContentRect.height - 30);
             table.RowHeight = LineHeight;
             table.RowColor = new Color(0, 0, 0, 0);
             table.AlternateRowColor = new Color(0, 0, 0, 0);
@@ -337,7 +343,21 @@ namespace EdB.PrepareCarefully {
             GUI.BeginGroup(ContentRect);
 
             try {
-                table.Draw(this.traitOptionList);
+                searchWidget.OnGUI(SearchRect,
+                    () => { searchText = searchWidget.filter.Text; },
+                    () => { searchText = null; });
+                filteredTraitOptionList.Clear();
+                if (string.IsNullOrWhiteSpace(searchText)) {
+                    filteredTraitOptionList.AddRange(traitOptionList);
+                }
+                else {
+                    foreach (TraitOption option in traitOptionList) {
+                        if ((option?.Trait?.LabelCap ?? "").IndexOf(searchText, StringComparison.OrdinalIgnoreCase) >= 0) {
+                            filteredTraitOptionList.Add(option);
+                        }
+                    }
+                }
+                table.Draw(filteredTraitOptionList);
             }
             finally {
                 GUI.EndGroup();

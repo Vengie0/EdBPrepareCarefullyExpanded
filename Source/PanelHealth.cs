@@ -266,6 +266,7 @@ namespace EdB.PrepareCarefully {
                 };
 
                 bodyPartDialog = new DialogOptions<BodyPartRecord>(null) {
+                    EnableSearch = true,
                     ConfirmButtonLabel = "EdB.PC.Common.Add".Translate(),
                     CancelButtonLabel = "EdB.PC.Common.Cancel".Translate(),
                     HeaderLabel = "EdB.PC.Dialog.BodyPart.Header".Translate(),
@@ -305,6 +306,7 @@ namespace EdB.PrepareCarefully {
                 };
 
                 injuryOptionDialog = new DialogOptions<InjuryOption>(healthOptions.SelectableInjuryOptions) {
+                    EnableSearch = true,
                     ConfirmButtonLabel = "EdB.PC.Common.Next".Translate(),
                     CancelButtonLabel = "EdB.PC.Common.Cancel".Translate(),
                     HeaderLabel = "EdB.PC.Dialog.Injury.Header".Translate(),

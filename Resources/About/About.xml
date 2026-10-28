@@ -34,6 +34,8 @@ If you get a set of starting colonists that you like, save them as a preset so t
 </description>
   <loadAfter>
     <li>net.pardeike.rimworld.mod.harmony</li>
+    <li>maux36.rimpsyche</li>
+    <li>maux36.rimpsyche.disposition</li>
   </loadAfter>
   <incompatibleWith>
     <li>EdB.PrepareCarefully</li>

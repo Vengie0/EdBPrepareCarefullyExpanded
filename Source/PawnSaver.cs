@@ -40,6 +40,7 @@ namespace EdB.PrepareCarefully {
             result.id = customizedPawn.Id ?? Guid.NewGuid().ToString();
             result.originalFactionDef = customizedPawn.OriginalFactionDef?.defName;
             result.thingDef = customizedPawn.Pawn.def.defName;
+            result.rimpsycheData = RimpsycheCompatibility.Capture(customizedPawn.Pawn);
             result.type = customizedPawn.Type.ToString();
             //if (customizedPawn.Type == CustomPawnType.World && customizedPawn.Faction != null) {
             //    result.faction = new SaveRecordFactionV4() {

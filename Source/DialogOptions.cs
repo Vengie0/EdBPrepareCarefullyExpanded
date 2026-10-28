@@ -30,6 +30,9 @@ namespace EdB.PrepareCarefully {
         public bool IncludeNone = false;
 
         protected string headerLabel = null;
+        protected string searchText = "";
+        protected QuickSearchWidget searchWidget = new QuickSearchWidget();
+        public bool EnableSearch { get; set; }
         public string HeaderLabel {
             get {
                 return headerLabel;
@@ -154,6 +157,13 @@ namespace EdB.PrepareCarefully {
                 Widgets.Label(headerRect, HeaderLabel);
             }
 
+            if (EnableSearch) {
+                Rect searchRect = new Rect(ContentRect.x + ContentRect.width - 220, ContentRect.y + cursor, 210, 24);
+                searchWidget.OnGUI(searchRect,
+                    () => { searchText = searchWidget.filter.Text; },
+                    () => { searchText = null; });
+                cursor += 30;
+            }
             Rect contentRect = ContentRect.InsetBy(0, 0, 0, cursor).OffsetBy(0, cursor);
             Rect scrollRect = new Rect(0, 0, contentRect.width, contentRect.height);
 
@@ -184,6 +194,16 @@ namespace EdB.PrepareCarefully {
 
             Rect itemRect = new Rect(0, cursor, ContentSize.x - 32, 0);
             IEnumerable<T> filteredOptions = FilterOptions(options);
+            if (EnableSearch && !string.IsNullOrWhiteSpace(searchText)) {
+                List<T> matchingOptions = new List<T>();
+                foreach (T option in filteredOptions) {
+                    string name = NameFunc(option) ?? "";
+                    if (name.IndexOf(searchText, StringComparison.OrdinalIgnoreCase) >= 0) {
+                        matchingOptions.Add(option);
+                    }
+                }
+                filteredOptions = matchingOptions;
+            }
             foreach (T option in filteredOptions) {
                 string name = NameFunc(option);
                 bool selected = SelectedFunc(option);
