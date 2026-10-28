@@ -21,12 +21,9 @@ namespace EdB.PrepareCarefully {
         private string focusedControl = "";
         private bool shouldFocusField = false;
         private GUIStyle textFieldStyle = null;
-        private DragSlider dragSlider = new DragSlider();
 
         public WidgetNumberField() {
             id = "CONTROL-" + Guid.NewGuid();
-            dragSlider.minValue = minValue;
-            dragSlider.maxValue = maxValue;
         }
 
         public Action<int> UpdateAction {
@@ -44,7 +41,6 @@ namespace EdB.PrepareCarefully {
             }
             set {
                 minValue = value;
-                dragSlider.minValue = value;
             }
         }
 
@@ -54,16 +50,6 @@ namespace EdB.PrepareCarefully {
             }
             set {
                 maxValue = value;
-                dragSlider.maxValue = value;
-            }
-        }
-
-        public DragSlider DragSlider {
-            get {
-                return dragSlider;
-            }
-            set {
-                dragSlider = value;
             }
         }
 
@@ -84,7 +70,6 @@ namespace EdB.PrepareCarefully {
             GUI.color = Style.ColorText;
             Text.Font = GameFont.Small;
 
-            bool dragging = false;
             string currentControl = GUI.GetNameOfFocusedControl();
             if (currentControl != focusedControl) {
                 if (focusedControl == id && currentControl != id) {
@@ -142,9 +127,16 @@ namespace EdB.PrepareCarefully {
             }
             else {
                 Widgets.DrawAtlas(rect, Textures.TextureFieldAtlas);
-                dragSlider.OnGUI(rect, value, (int v) => {
-                    Update(v);
-                });
+
+                // Draw the current value (this used to be done by the drag slider).
+                GUI.color = Color.white;
+                Text.Anchor = TextAnchor.MiddleCenter;
+                Rect labelRect = new Rect(rect.x, rect.y + 1, rect.width, rect.height);
+                Widgets.Label(labelRect, value.ToString());
+                Text.Anchor = TextAnchor.UpperLeft;
+                GUI.color = Color.white;
+
+                // A quick click switches to the text field.
                 if (rect.Contains(Event.current.mousePosition)) {
                     if (Event.current.type == EventType.MouseDown) {
                         ticksSinceClick = Environment.TickCount;
@@ -158,7 +150,6 @@ namespace EdB.PrepareCarefully {
                         ticksSinceClick = 0;
                     }
                 }
-                dragging = DragSlider.IsDragging();
             }
 
             // Draw the decrement button.
@@ -167,7 +158,7 @@ namespace EdB.PrepareCarefully {
                 GUI.color = Style.ColorButtonDisabled;
             }
             else {
-                if (!dragging && !showTextField) {
+                if (!showTextField) {
                     Style.SetGUIColorForButton(buttonRect);
                 }
                 else {
@@ -190,7 +181,7 @@ namespace EdB.PrepareCarefully {
                 GUI.color = Style.ColorButtonDisabled;
             }
             else {
-                if (!dragging && !showTextField) {
+                if (!showTextField) {
                     Style.SetGUIColorForButton(buttonRect);
                 }
                 else {

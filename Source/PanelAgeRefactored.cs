@@ -39,7 +39,6 @@ namespace EdB.PrepareCarefully {
 
         public PanelAgeRefactored() {
             biologicalFieldYears = new WidgetNumberField() {
-                DragSlider = new DragSlider(0.4f, 20, 100),
                 MinValue = 0,
                 MaxValue = 99,
                 UpdateAction = (int value) => {
@@ -47,7 +46,6 @@ namespace EdB.PrepareCarefully {
                 }
             };
             biologicalFieldDays = new WidgetNumberField() {
-                DragSlider = new DragSlider(0.4f, 15, 100),
                 MinValue = 0,
                 MaxValue = 59,
                 UpdateAction = (int value) => {
@@ -55,7 +53,6 @@ namespace EdB.PrepareCarefully {
                 }
             };
             chronologicalFieldYears = new WidgetNumberField() {
-                DragSlider = new DragSlider(0.4f, 15, 100),
                 MinValue = 0,
                 MaxValue = AgeChronologicalMax,
                 UpdateAction = (int value) => {
@@ -63,7 +60,6 @@ namespace EdB.PrepareCarefully {
                 }
             };
             chronologicalFieldDays = new WidgetNumberField() {
-                DragSlider = new DragSlider(0.4f, 15, 100),
                 MinValue = 0,
                 MaxValue = 59,
                 UpdateAction = (int value) => {

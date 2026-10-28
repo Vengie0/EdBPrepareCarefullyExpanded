@@ -108,7 +108,7 @@ namespace EdB.PrepareCarefully {
                 Logger.Debug("Swapped gender-specific head type with matching: " + matchingDef.defName);
                 return matchingDef;
             }
-            HeadTypeDef result = DefDatabase<HeadTypeDef>.AllDefs.Where(d => d.gender == targetGender).FirstOrDefault(null);
+            HeadTypeDef result = DefDatabase<HeadTypeDef>.AllDefs.Where(d => d.gender == targetGender).FirstOrDefault();
             if (result != null) {
                 Logger.Debug("Swapped gender-specific head type with first found: " + result.defName);
                 return result;
