@@ -14,6 +14,7 @@ namespace EdB.PrepareCarefully {
         public SaveRecordMutantV5 mutant;
         public string originalFactionDef;
         public string thingDef;
+        public string rimpsycheData;
         public Gender gender;
         public string adulthood;
         public string childhood;
@@ -77,6 +78,9 @@ namespace EdB.PrepareCarefully {
             Scribe_Deep.Look(ref this.mutant, "mutant");
             Scribe_Values.Look<string>(ref this.originalFactionDef, "originalFactionDef", null, false);
             Scribe_Values.Look<string>(ref this.thingDef, "thingDef", ThingDefOf.Human.defName, false);
+            if (RimpsycheCompatibility.IsActive) {
+                Scribe_Values.Look<string>(ref this.rimpsycheData, "rimpsycheData", null, false);
+            }
             Scribe_Values.Look<Gender>(ref this.gender, "gender", Gender.Male, false);
             Scribe_Values.Look<string>(ref this.childhood, "childhood", null, false);
             Scribe_Values.Look<string>(ref this.adulthood, "adulthood", null, false);

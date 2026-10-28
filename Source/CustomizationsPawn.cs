@@ -98,6 +98,7 @@ namespace EdB.PrepareCarefully {
         // Traits
 
         public List<CustomizationsTrait> Traits { get; set; } = new List<CustomizationsTrait>();
+        public string RimpsycheData { get; set; }
 
         // Age
         public long BiologicalAgeInTicks { get; set; }

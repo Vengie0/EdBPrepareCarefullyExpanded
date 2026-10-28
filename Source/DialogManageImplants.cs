@@ -83,6 +83,10 @@ namespace EdB.PrepareCarefully {
         protected bool confirmed = false;
         protected WidgetTable<DialogOption> table;
         protected List<DialogOption> options = new List<DialogOption>();
+        protected List<DialogOption> filteredOptions = new List<DialogOption>();
+        protected string searchText = "";
+        protected QuickSearchWidget searchWidget = new QuickSearchWidget();
+        protected Rect SearchRect;
         protected List<Implant> implantList = new List<Implant>();
         protected Dictionary<BodyPartRecord, Implant> replacedParts = new Dictionary<BodyPartRecord, Implant>();
         protected CustomizedPawn customizedPawn = null;
@@ -634,6 +638,8 @@ namespace EdB.PrepareCarefully {
 
             ContentRect = new Rect(ContentMargin.x, ContentMargin.y + headerSize, ContentSize.x, ContentSize.y);
 
+            SearchRect = new Rect(ContentRect.width - 220, 0, 210, 24);
+
             ScrollRect = new Rect(0, 0, ContentRect.width, ContentRect.height);
 
             HeaderRect = new Rect(ContentMargin.x, ContentMargin.y, ContentSize.x, HeaderHeight);
@@ -657,7 +663,7 @@ namespace EdB.PrepareCarefully {
             Vector2 nameSize = new Vector2(ContentRect.width - portraitSize.x - radioWidth, portraitSize.y * 0.5f);
 
             table = new WidgetTable<DialogOption>();
-            table.Rect = new Rect(Vector2.zero, ContentRect.size);
+            table.Rect = new Rect(0, 30, ContentRect.width, ContentRect.height - 30);
             table.RowHeight = LineHeight;
             table.RowColor = new Color(0, 0, 0, 0);
             table.AlternateRowColor = new Color(0, 0, 0, 0);
@@ -825,7 +831,21 @@ namespace EdB.PrepareCarefully {
             GUI.BeginGroup(ContentRect);
 
             try {
-                table.Draw(this.options);
+                searchWidget.OnGUI(SearchRect,
+                    () => { searchText = searchWidget.filter.Text; },
+                    () => { searchText = null; });
+                filteredOptions.Clear();
+                if (string.IsNullOrWhiteSpace(searchText)) {
+                    filteredOptions.AddRange(options);
+                }
+                else {
+                    foreach (DialogOption option in options) {
+                        if ((option?.Label ?? "").IndexOf(searchText, StringComparison.OrdinalIgnoreCase) >= 0) {
+                            filteredOptions.Add(option);
+                        }
+                    }
+                }
+                table.Draw(filteredOptions);
             }
             finally {
                 GUI.EndGroup();

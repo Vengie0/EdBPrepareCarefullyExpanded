@@ -144,6 +144,7 @@ namespace EdB.PrepareCarefully {
                     Degree = trait.Degree
                 });
             }
+            customizations.RimpsycheData = RimpsycheCompatibility.Capture(pawn);
         }
         public void MapAppearance(Pawn pawn, CustomizationsPawn customizations) {
             customizations.Hair = pawn.story.hairDef;

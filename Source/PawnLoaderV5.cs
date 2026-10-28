@@ -169,6 +169,7 @@ namespace EdB.PrepareCarefully {
         public PawnLoaderResult ConvertSaveRecordToCustomizedPawn(SaveRecordPawnV5 record) {
             PawnLoaderResult result = new PawnLoaderResult();
             CustomizationsPawn customizations = new CustomizationsPawn();
+            customizations.RimpsycheData = record.rimpsycheData;
             CustomizedPawn customizedPawn = new CustomizedPawn() {
                 Customizations = customizations,
             };

@@ -34,6 +34,7 @@ namespace EdB.PrepareCarefully {
             ApplyIdeoCustomizationToPawn(pawn, customizations);
             ApplyTitleCustomizationsToPawn(pawn, customizations);
             ApplyOtherCustomizationsToPawn(pawn, customizations);
+            RimpsycheCompatibility.Restore(pawn, customizations.RimpsycheData);
             UtilityPawns.ClearPawnGraphicsCache(pawn);
         }
 
