@@ -143,8 +143,9 @@ namespace EdB.PrepareCarefully {
                 Logger.Warning("Trying to save a character without a name");
                 return;
             }
-            PawnManager.SavePawn(ViewState.CurrentPawn, filename);
-            Messages.Message("SavedAs".Translate(filename), MessageTypeDefOf.TaskCompletion);
+            if (PawnManager.SavePawn(ViewState.CurrentPawn, filename)) {
+                Messages.Message("SavedAs".Translate(filename), MessageTypeDefOf.TaskCompletion);
+            }
         }
 
         public void RandomizeCurrentPawn() {

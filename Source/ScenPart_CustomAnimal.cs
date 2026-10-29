@@ -46,7 +46,7 @@ namespace EdB.PrepareCarefully {
         }
         public override IEnumerable<Thing> PlayerStartingThings() {
             List<Thing> result = new List<Thing>();
-            if (animalKindDef == null) {
+            if (animalKindDef == null || count <= 0) {
                 return result;
             }
             for (int i=0; i<count; i++) {
@@ -59,9 +59,9 @@ namespace EdB.PrepareCarefully {
                 if (pawn.Name == null || pawn.Name.Numerical) {
                     pawn.Name = PawnBioAndNameGenerator.GeneratePawnName(pawn, NameStyle.Full, null);
                 }
-                if (Rand.Value < bondToRandomPlayerPawnChance) {
-                    Pawn bonded = Find.GameInitData.startingAndOptionalPawns.RandomElement<Pawn>();
-                    if (!bonded.story.traits.HasTrait(TraitDefOf.Psychopath)) {
+                if (Rand.Value < bondToRandomPlayerPawnChance && Find.GameInitData?.startingAndOptionalPawns != null) {
+                    Pawn bonded = Find.GameInitData.startingAndOptionalPawns.RandomElementWithFallback(null);
+                    if (bonded?.story?.traits != null && bonded.relations != null && !bonded.story.traits.HasTrait(TraitDefOf.Psychopath)) {
                         bonded.relations.AddDirectRelation(PawnRelationDefOf.Bond, pawn);
                     }
                 }
@@ -76,6 +76,9 @@ namespace EdB.PrepareCarefully {
             if (tag == "PlayerStartsWith") {
                 StringBuilder label = new StringBuilder();
                 List<string> entries = new List<string>();
+                if (this.KindDef == null) {
+                    return Enumerable.Empty<string>();
+                }
                 if (this.KindDef.race != null && this.KindDef.RaceProps.hasGenders) {
                     label.Append("PawnMainDescGendered".Translate(this.gender.GetLabel(), this.KindDef.label).CapitalizeFirst());
                 }
@@ -94,7 +97,8 @@ namespace EdB.PrepareCarefully {
         public override void ExposeData() {
             base.ExposeData();
             Scribe_Defs.Look<PawnKindDef>(ref this.animalKindDef, "animalKind");
-            Scribe_Values.Look<int>(ref this.count, "count", 0, false);
+            Scribe_Values.Look<int>(ref this.count, "count", 1, false);
+            Scribe_Values.Look<Gender>(ref this.gender, "gender", Gender.None, false);
             Scribe_Values.Look<float>(ref this.bondToRandomPlayerPawnChance, "bondToRandomPlayerPawnChance", 0f, false);
         }
     }

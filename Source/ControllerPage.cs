@@ -410,8 +410,9 @@ namespace EdB.PrepareCarefully {
             foreach (var customizedPawn in State.Customizations.AllPawns) {
                 ManagerPawns.MapCustomizationsForPawn(customizedPawn);
             }
-            PresetSaver.SaveToFile(State, filename);
-            Messages.Message("SavedAs".Translate(filename), MessageTypeDefOf.TaskCompletion);
+            if (PresetSaver.SaveToFile(State, filename)) {
+                Messages.Message("SavedAs".Translate(filename), MessageTypeDefOf.TaskCompletion);
+            }
         }
     }
 }
