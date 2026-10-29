@@ -10,28 +10,48 @@ namespace EdB.PrepareCarefully {
         public ProviderHealthOptions ProviderHealthOptions { get; set; }
         public ProviderPassions ProviderPassions { get; set; }
 
-        public void SaveToFile(CustomizedPawn customizedPawn, string colonistName) {
-            if (customizedPawn?.Customizations == null) {
-                Logger.Error("Failed to save character file because customizations were null");
-            }
-            SaveRecordPawnV5 pawn = ConvertCustomizedPawnToSaveRecord(customizedPawn);
+        public bool SaveToFile(CustomizedPawn customizedPawn, string colonistName) {
+            bool savingInitialized = false;
+            bool saved = false;
             try {
+                if (customizedPawn?.Customizations == null || customizedPawn.Pawn == null) {
+                    Logger.Error("Failed to save character file because pawn customizations were null");
+                    Messages.Message("EdB.PC.Dialog.PawnPreset.Error.Failed".Translate(), MessageTypeDefOf.RejectInput, false);
+                    return false;
+                }
+                SaveRecordPawnV5 pawn = ConvertCustomizedPawnToSaveRecord(customizedPawn);
                 Scribe.saver.InitSaving(ColonistFiles.FilePathForSavedColonist(colonistName), "character");
+                savingInitialized = true;
                 string versionStringFull = "5";
                 Scribe_Values.Look<string>(ref versionStringFull, "version", null, false);
                 string modString = GenText.ToCommaList(Enumerable.Select<ModContentPack, string>(LoadedModManager.RunningMods, (Func<ModContentPack, string>)(mod => mod.Name)), true);
                 Scribe_Values.Look<string>(ref modString, "mods", null, false);
 
                 Scribe_Deep.Look<SaveRecordPawnV5>(ref pawn, "pawn");
+                saved = true;
             }
             catch (Exception e) {
-                Logger.Error("Failed to save preset file");
-                throw e;
+                Logger.Error("Failed to save character file: " + e);
+                saved = false;
             }
             finally {
-                Scribe.saver.FinalizeSaving();
-                Scribe.mode = LoadSaveMode.Inactive;
+                try {
+                    if (savingInitialized) {
+                        Scribe.saver.FinalizeSaving();
+                    }
+                }
+                catch (Exception e) {
+                    Logger.Error("Failed to finalize character file: " + e);
+                    saved = false;
+                }
+                finally {
+                    Scribe.mode = LoadSaveMode.Inactive;
+                }
             }
+            if (!saved) {
+                Messages.Message("EdB.PC.Dialog.PawnPreset.Error.Failed".Translate(), MessageTypeDefOf.RejectInput, false);
+            }
+            return saved;
         }
 
         public SaveRecordPawnV5 ConvertCustomizedPawnToSaveRecord(CustomizedPawn customizedPawn) {

@@ -1230,8 +1230,12 @@ namespace EdB.PrepareCarefully {
             if (ideo != null) {
                 Ideo currentIdeo = ideo.Ideo;
                 float certainty = ideo.Certainty;
-                Ideo newIdeo = Find.IdeoManager.IdeosInViewOrder.Where(i => i != currentIdeo).RandomElement();
-                ideo.SetIdeo(newIdeo);
+                Ideo newIdeo = Find.IdeoManager?.IdeosInViewOrder
+                    .Where(i => i != currentIdeo)
+                    .RandomElementWithFallback(null);
+                if (newIdeo != null) {
+                    ideo.SetIdeo(newIdeo);
+                }
             }
             // TODO 
             // set it in customizations
@@ -1241,9 +1245,12 @@ namespace EdB.PrepareCarefully {
             customizedPawn.Customizations = PawnToCustomizationsMapper.Map(customizedPawn.Pawn);
         }
 
-        public void SavePawn(CustomizedPawn customizedPawn, string filename) {
+        public bool SavePawn(CustomizedPawn customizedPawn, string filename) {
+            if (customizedPawn?.Pawn == null) {
+                return false;
+            }
             MapCustomizationsForPawn(customizedPawn);
-            PawnSaver.SaveToFile(customizedPawn, filename);
+            return PawnSaver.SaveToFile(customizedPawn, filename);
         }
 
         public void UpdateFavoriteColor(CustomizedPawn customizedPawn, ColorDef colorDef) {

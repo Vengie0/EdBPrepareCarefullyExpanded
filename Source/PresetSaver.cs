@@ -13,8 +13,10 @@ namespace EdB.PrepareCarefully {
             return Guid.NewGuid().ToString();
         }
 
-        public void SaveToFile(ModState state, string presetName) {
+        public bool SaveToFile(ModState state, string presetName) {
             bool problem = false;
+            bool savingInitialized = false;
+            bool saved = false;
             try {
                 // Verify that all pawns have non-null identifiers.
                 foreach (CustomizedPawn customizedPawn in state.Customizations.AllPawns) {
@@ -126,22 +128,36 @@ namespace EdB.PrepareCarefully {
 
                 // Start saving.
                 Scribe.saver.InitSaving(PresetFiles.FilePathForSavedPreset(presetName), "preset");
+                savingInitialized = true;
                 preset.ExposeData();
+                saved = true;
             }
             catch (Exception e) {
-                // TODO
-                //PrepareCarefully.Instance.State.AddError("EdB.PC.Dialog.Preset.Error.SaveFailed".Translate());
-                Logger.Error("Failed to save preset file");
-                throw e;
+                Logger.Error("Failed to save preset file: " + e);
+                saved = false;
             }
             finally {
-                Scribe.saver.FinalizeSaving();
-                Scribe.mode = LoadSaveMode.Inactive;
-                if (problem) {
-                    // TODO
-                    //PrepareCarefully.Instance.State.AddError("EdB.PC.Dialog.Preset.Error.PartialSaveFailure".Translate());
+                try {
+                    if (savingInitialized) {
+                        Scribe.saver.FinalizeSaving();
+                    }
+                }
+                catch (Exception e) {
+                    Logger.Error("Failed to finalize preset file: " + e);
+                    saved = false;
+                }
+                finally {
+                    Scribe.mode = LoadSaveMode.Inactive;
                 }
             }
+            if (!saved) {
+                Messages.Message("EdB.PC.Dialog.Preset.Error.SaveFailed".Translate(), MessageTypeDefOf.RejectInput, false);
+                return false;
+            }
+            if (problem) {
+                Messages.Message("EdB.PC.Dialog.Preset.Error.PartialSaveFailure".Translate(), MessageTypeDefOf.RejectInput, false);
+            }
+            return true;
         }
     }
 }
