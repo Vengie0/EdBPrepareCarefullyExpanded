@@ -99,6 +99,41 @@ namespace EdB.PrepareCarefully {
                 ViewState.CostCalculationDirtyFlag = false;
             }
             base.DrawPageTitle(inRect);
+
+            string expandedcredit = "(Continued by Vengie)";
+
+            GameFont oldFont = Text.Font;
+            TextAnchor oldAnchor = Text.Anchor;
+            Color oldColor = GUI.color;
+
+
+            Text.Font = GameFont.Medium;
+            float titleWidth = Text.CalcSize(PageTitle).x;
+
+            Text.Font = GameFont.Tiny;
+            float expandedcreditWidth = Text.CalcSize(expandedcredit).x;
+            float titleLeft = 0f;
+            float expandedcreditX = titleLeft + titleWidth + 2f;
+            float expandedcreditY = -10f;
+
+            Text.Anchor = TextAnchor.MiddleLeft;
+            GUI.color = Color.gray;
+
+            Widgets.Label(
+                new Rect(expandedcreditX, expandedcreditY, expandedcreditWidth + 10f, 35f),
+                          expandedcredit
+            );
+
+
+            Text.Font = oldFont;
+            Text.Anchor = oldAnchor;
+            GUI.color = oldColor;
+
+            GUI.color = Color.white;
+            Text.Anchor = TextAnchor.UpperLeft;
+            Text.Font = GameFont.Small;
+
+
             Rect mainRect = base.GetMainRect(inRect, 0, false).InsetBy(0, -6, 0, 0);
             Widgets.DrawMenuSection(mainRect);
             DrawTabViews(mainRect);

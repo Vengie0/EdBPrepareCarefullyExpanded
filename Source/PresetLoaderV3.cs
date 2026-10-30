@@ -188,9 +188,9 @@ namespace EdB.PrepareCarefully {
                     customizations.Equipment = equipment;
                 }
             }
-            catch (Exception e) {
+            catch (Exception) {
                 Logger.Error("Failed to load preset file");
-                throw e;
+                throw;
             }
             finally {
                 UtilitySaveLoad.ClearSaveablesAndCrossRefs();

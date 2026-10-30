@@ -122,9 +122,9 @@ namespace EdB.PrepareCarefully {
                     return result;
                 }
             }
-            catch (Exception e) {
+            catch (Exception) {
                 Logger.Error("Failed to load character file");
-                throw e;
+                throw;
             }
             finally {
                 UtilitySaveLoad.ClearSaveablesAndCrossRefs();

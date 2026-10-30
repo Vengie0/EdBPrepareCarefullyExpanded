@@ -16,9 +16,9 @@ namespace EdB.PrepareCarefully {
                 Scribe.loader.InitLoading(PresetFiles.FilePathForSavedPreset(presetName));
                 Scribe_Values.Look<string>(ref version, "version", "unknown", false);
             }
-            catch (Exception e) {
+            catch (Exception) {
                 Logger.Error("Failed to load preset file");
-                throw e;
+                throw;
             }
             finally {
                 Scribe.mode = LoadSaveMode.Inactive;

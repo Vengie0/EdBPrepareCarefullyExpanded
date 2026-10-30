@@ -12,9 +12,9 @@ namespace EdB.PrepareCarefully {
                 try {
                     return Reflection.ReflectorGenFilePaths.FolderUnderSaveData("PrepareCarefully");
                 }
-                catch (Exception e) {
+                catch (Exception) {
                     Logger.Error("Failed to get colonist save directory");
-                    throw e;
+                    throw;
                 }
             }
         }
