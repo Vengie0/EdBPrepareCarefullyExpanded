@@ -70,6 +70,9 @@ namespace EdB.PrepareCarefully {
             Text.Font = savedFont;
 
             float labelPadding = 4;
+            // Skill level numbers are drawn inside the bar. Reserve enough width for
+            // two-digit levels so long localized skill labels don't clip the values.
+            float minimumSkillValueWidth = Text.CalcSize("20").x + 6;
             float availableContentWidth = PanelRect.width - panelPaddingLeft - panelPaddingRight;
             Vector2 passionSize = new Vector2(24, 24);
             float passionPadding = 2;
@@ -77,6 +80,7 @@ namespace EdB.PrepareCarefully {
             float arrowsWidth = 32;
             Vector2 skillBarSize = new Vector2(availableContentWidth - passionSize.x - passionPadding
                 - arrowsWidth - maxLabelSize.x - labelPadding, 22);
+            skillBarSize.x = Mathf.Max(skillBarSize.x, minimumSkillValueWidth);
 
             RectButtonClearSkills = new Rect(PanelRect.width - 65, 9, 20, 20);
             RectButtonResetSkills = new Rect(PanelRect.width - 38, 8, 23, 21);
