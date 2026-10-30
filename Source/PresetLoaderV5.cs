@@ -23,9 +23,9 @@ namespace EdB.PrepareCarefully {
                 //    pawnLoader.IdeoMap = ResolveIdeoMap(preset);
                 //}
             }
-            catch (Exception e) {
-                Logger.Error("Failed to load preset file", e);
-                throw e;
+            catch (Exception) {
+                Logger.Error("Failed to load preset file");
+                throw;
             }
             finally {
                 UtilitySaveLoad.ClearSaveablesAndCrossRefs();

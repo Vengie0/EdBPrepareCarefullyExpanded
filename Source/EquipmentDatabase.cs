@@ -469,9 +469,9 @@ namespace EdB.PrepareCarefully {
                 }
                 progress = "6";
             }
-            catch (Exception ex) {
+            catch (Exception) {
                 Logger.Warning("Failed to add " + (def?.defName ?? "null") + "; progress = " + progress);
-                throw ex;
+                throw;
             }
             return true;
         }

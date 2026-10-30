@@ -266,7 +266,7 @@
   <EdB.PC.Dialog.Titles.Header>Add a Title</EdB.PC.Dialog.Titles.Header>
   
   <EdB.PC.Dialog.UnrecoverableError.Header>Unrecoverable Error</EdB.PC.Dialog.UnrecoverableError.Header>
-  <EdB.PC.Dialog.UnrecoverableError.Message>Something went wrong, and Prepare Carefully was not able to recover.  The following error message may help identify the problem:
+  <EdB.PC.Dialog.UnrecoverableError.Message>Something went wrong, and Prepare Carefully Expanded was not able to recover.  The following error message may help identify the problem:
 
 "{0}"</EdB.PC.Dialog.UnrecoverableError.Message>
 
@@ -309,17 +309,17 @@
   <EdB.PC.Error.NotEnoughPoints>You've spent too many points.</EdB.PC.Error.NotEnoughPoints>
   <EdB.PC.Error.NotEnoughColonists1>You must have at least one colonist.</EdB.PC.Error.NotEnoughColonists1>
   <EdB.PC.Error.NotEnoughColonists>You must have at least {0} colonists.</EdB.PC.Error.NotEnoughColonists>
-  <EdB.PC.Error.GameVersion>Prepare Carefully failed to initialize.
+  <EdB.PC.Error.GameVersion>Prepare Carefully Expanded failed to initialize.
   
 This may be because you are running an older version of RimWorld than required.
 
-You are running version {0} of the game.  Prepare Carefully requires that you run at least version {1}.
+You are running version {0} of the game.  Prepare Carefully Expanded requires that you run at least version {1}.
   
 Please update to the minimum required version or newer to see if it fixes your problem.
   </EdB.PC.Error.GameVersion>
-  <EdB.PC.Error.Initialization>Prepare Carefully failed to initialize.
+  <EdB.PC.Error.Initialization>Prepare Carefully Expanded failed to initialize.
 
-This is frequently caused by an unexpected issue between Prepare Carefully and another mod but could also be a caused by a bug in Prepare Carefully.
+This is frequently caused by an unexpected issue between Prepare Carefully Expanded and another mod but could also be a caused by a bug in Prepare Carefully Expanded.
 
 Before reporting an error, please try to figure out which mod may be causing the problem.  If you have a lot of mods, you can use a divide and conquer approach to disable mods until you find the one that's triggering the issue.
   </EdB.PC.Error.Initialization>
@@ -357,7 +357,7 @@ Before reporting an error, please try to figure out which mod may be causing the
   <EdB.PC.Pawn.TemporaryPawnNameShort>Temp {0}</EdB.PC.Pawn.TemporaryPawnNameShort>
 
   <EdB.PC.Page.Button.LoadPreset>Load Preset</EdB.PC.Page.Button.LoadPreset>
-  <EdB.PC.Page.Button.PrepareCarefully>Prepare Carefully</EdB.PC.Page.Button.PrepareCarefully>
+  <EdB.PC.Page.Button.PrepareCarefully>Prepare Carefully Expanded</EdB.PC.Page.Button.PrepareCarefully>
   <EdB.PC.Page.Button.SavePreset>Save Preset</EdB.PC.Page.Button.SavePreset>
   <EdB.PC.Page.ConfirmExit>Are you sure that you do not want to Prepare Carefully?  Any changes that you made will be lost.</EdB.PC.Page.ConfirmExit>
   <EdB.PC.Page.ConfirmStart>Are you sure that you are finished with your customizations?  Confirm that you're ready to start!</EdB.PC.Page.ConfirmStart>
@@ -378,7 +378,7 @@ Before reporting an error, please try to figure out which mod may be causing the
 
 Disable point limits to prepare your starting colonists with no limitations.
   </EdB.PC.Page.Points.UsePoints.Tip>
-  <EdB.PC.Page.Title>Prepare Carefully</EdB.PC.Page.Title>
+  <EdB.PC.Page.Title>Prepare Carefully Expanded</EdB.PC.Page.Title>
 
   <EdB.PC.Panel.Abilities.None>No abilities</EdB.PC.Panel.Abilities.None>
 
