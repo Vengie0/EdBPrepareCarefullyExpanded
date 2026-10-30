@@ -144,6 +144,33 @@ namespace EdB.PrepareCarefully {
             biologicalFieldYears.MinValue = minAge;
             biologicalFieldYears.MaxValue = maxAge;
 
+            int biologicalYears = pawn.ageTracker.AgeBiologicalYears;
+            int biologicalDays = AgeModifier.TicksToDays(pawn.ageTracker.AgeBiologicalTicks) % DaysPerYear;
+            int chronologicalYears = pawn.ageTracker.AgeChronologicalYears;
+            int chronologicalDays = AgeModifier.TicksToDays(pawn.ageTracker.AgeChronologicalTicks) % DaysPerYear;
+
+            GameFont savedFont = Text.Font;
+            Text.Font = GameFont.Small;
+            float biologicalYearsWidth = NumberFieldWidth(biologicalYears);
+            float chronologicalYearsWidth = NumberFieldWidth(chronologicalYears);
+            float biologicalDaysWidth = NumberFieldWidth(biologicalDays);
+            float chronologicalDaysWidth = NumberFieldWidth(chronologicalDays);
+            float yearsColumnWidth = Mathf.Max(biologicalYearsWidth, chronologicalYearsWidth);
+            float daysColumnWidth = Mathf.Max(biologicalDaysWidth, chronologicalDaysWidth);
+            Text.Font = savedFont;
+
+            float yearsColumnX = RectBiologicalAgeFieldYears.x;
+            float gapBetweenColumns = RectBiologicalAgeFieldDays.x - RectBiologicalAgeFieldYears.x - RectBiologicalAgeFieldYears.width;
+            float arrowWidth = Textures.TextureButtonNext.width;
+            float minimumGapBetweenColumns = 2 * (arrowWidth + 1);
+            float panelRight = Width - Style.SizePanelPadding.x;
+            float maximumDaysColumnX = panelRight - arrowWidth - 1 - daysColumnWidth;
+            float daysColumnX = yearsColumnX + yearsColumnWidth + gapBetweenColumns;
+            if (daysColumnX > maximumDaysColumnX) {
+                gapBetweenColumns = Mathf.Max(minimumGapBetweenColumns, gapBetweenColumns - (daysColumnX - maximumDaysColumnX));
+                daysColumnX = yearsColumnX + yearsColumnWidth + gapBetweenColumns;
+            }
+
             float top = y;
             y += Margin.y;
 
@@ -153,9 +180,11 @@ namespace EdB.PrepareCarefully {
             Text.Font = GameFont.Tiny;
             GUI.color = Style.ColorText;
             Text.Anchor = TextAnchor.MiddleCenter;
-            rect = RectYearsLabel.OffsetBy(0, y - RectYearsLabel.height);
+            rect = new Rect(yearsColumnX + (yearsColumnWidth - RectYearsLabel.width) * 0.5f,
+                y - RectYearsLabel.height, RectYearsLabel.width, RectYearsLabel.height);
             Widgets.Label(rect, "EdB.PC.Panel.Age.Label.Years".Translate());
-            rect = RectDaysLabel.OffsetBy(0, y - RectDaysLabel.height);
+            rect = new Rect(daysColumnX + (daysColumnWidth - RectDaysLabel.width) * 0.5f,
+                y - RectDaysLabel.height, RectDaysLabel.width, RectDaysLabel.height);
             Widgets.Label(rect, "EdB.PC.Panel.Age.Label.Days".Translate());
 
             Text.Font = GameFont.Small;
@@ -164,11 +193,13 @@ namespace EdB.PrepareCarefully {
             rect = RectBiologicalAgeLabel.OffsetBy(0, y);
             Widgets.Label(rect, "EdB.PC.Panel.Age.Label.BiologicalAge".Translate());
             // Biological age years field.
-            rect = RectBiologicalAgeFieldYears.OffsetBy(0, y);
-            biologicalFieldYears.Draw(rect, pawn.ageTracker.AgeBiologicalYears);
+            rect = new Rect(yearsColumnX + (yearsColumnWidth - biologicalYearsWidth) * 0.5f, y,
+                biologicalYearsWidth, RectBiologicalAgeFieldYears.height);
+            biologicalFieldYears.Draw(rect, biologicalYears);
             // Biological age days field.
-            rect = RectBiologicalAgeFieldDays.OffsetBy(0, y);
-            biologicalFieldDays.Draw(rect, AgeModifier.TicksToDays(pawn.ageTracker.AgeBiologicalTicks) % DaysPerYear);
+            rect = new Rect(daysColumnX + (daysColumnWidth - biologicalDaysWidth) * 0.5f, y,
+                biologicalDaysWidth, RectBiologicalAgeFieldDays.height);
+            biologicalFieldDays.Draw(rect, biologicalDays);
 
             y += RectBiologicalAgeLabel.height;
 
@@ -181,11 +212,13 @@ namespace EdB.PrepareCarefully {
             rect = RectChronologicalAgeLabel.OffsetBy(0, y);
             Widgets.Label(rect, "EdB.PC.Panel.Age.Label.ChronologicalAge".Translate());
             // Chronological age years field.
-            rect = RectChronologicalAgeFieldYears.OffsetBy(0, y);
-            chronologicalFieldYears.Draw(rect, pawn.ageTracker.AgeChronologicalYears);
+            rect = new Rect(yearsColumnX + (yearsColumnWidth - chronologicalYearsWidth) * 0.5f, y,
+                chronologicalYearsWidth, RectChronologicalAgeFieldYears.height);
+            chronologicalFieldYears.Draw(rect, chronologicalYears);
             // Chronological age days field.
-            rect = RectChronologicalAgeFieldDays.OffsetBy(0, y);
-            chronologicalFieldDays.Draw(rect, AgeModifier.TicksToDays(pawn.ageTracker.AgeChronologicalTicks) % DaysPerYear);
+            rect = new Rect(daysColumnX + (daysColumnWidth - chronologicalDaysWidth) * 0.5f, y,
+                chronologicalDaysWidth, RectChronologicalAgeFieldDays.height);
+            chronologicalFieldDays.Draw(rect, chronologicalDays);
 
             y += RectChronologicalAgeLabel.height;
 
@@ -194,6 +227,10 @@ namespace EdB.PrepareCarefully {
             Text.Anchor = TextAnchor.UpperLeft;
 
             return y - top;
+        }
+
+        private static float NumberFieldWidth(int value) {
+            return Mathf.Max(24f, Mathf.Ceil(Text.CalcSize(value.ToString()).x + 14f));
         }
     }
 }
