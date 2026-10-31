@@ -472,4 +472,5 @@ Click the randomize button to generate a colonist with this xenotype</EdB.PC.Pan
 
 
 
+    <EdB.PC.Health.EditFailed>The health change failed. The previous pawn state has been restored.</EdB.PC.Health.EditFailed>
 </LanguageData>

@@ -65,14 +65,7 @@ namespace EdB.PrepareCarefully {
         }
 
         public void CancelCustomizations() {
-            foreach (var pawn in Find.GameInitData.startingAndOptionalPawns) {
-                if (State.OriginalPawnCustomizations.TryGetValue(pawn, out var customization)) {
-                    PawnCustomizer.ApplyAllCustomizationsToPawn(pawn, customization);
-                }
-                else {
-                    Logger.Warning(string.Format("There may have been a problem undoing all pawn customizations.  The original state of a pawn was not stored properly"));
-                }
-            }
+            State.OriginalPawnBackup?.Restore();
             foreach (var pawn in State.Customizations.AllPawns) {
                 if (pawn.Pawn != null && !Find.GameInitData.startingAndOptionalPawns.Contains(pawn.Pawn)) {
                     ManagerPawns.DestroyPawn(pawn.Pawn);
@@ -389,11 +382,24 @@ namespace EdB.PrepareCarefully {
                 return;
             }
 
-            Messages.Message("EdB.PC.Dialog.Preset.Loaded".Translate(filename), MessageTypeDefOf.TaskCompletion);
-
+            var created = new List<Pawn>();
+            try {
+                foreach (var customizedPawn in customizations.AllPawns) {
+                    customizedPawn.Pawn = ManagerPawns.Customizer.CreatePawnFromCustomizations(customizedPawn.Customizations);
+                    created.Add(customizedPawn.Pawn);
+                    ManagerPawns.MapCustomizationsForPawn(customizedPawn);
+                }
+            }
+            catch (Exception e) {
+                foreach (var pawn in created) {
+                    ManagerPawns.DestroyPawn(pawn);
+                }
+                Logger.Warning("Could not safely restore the preset's pawn state", e);
+                Messages.Message("EdB.PC.Dialog.Preset.Error.FailedToLoad".Translate(filename), MessageTypeDefOf.RejectInput, false);
+                return;
+            }
             ManagerPawns.ClearPawns();
             foreach (var customizedPawn in customizations.AllPawns) {
-                customizedPawn.Pawn = ManagerPawns.Customizer.CreatePawnFromCustomizations(customizedPawn.Customizations);
                 ManagerPawns.AddPawnToPawnList(customizedPawn);
             }
             ManagerEquipment.ClearEquipment();
@@ -404,6 +410,7 @@ namespace EdB.PrepareCarefully {
             State.Customizations.Relationships = customizations.Relationships;
             State.Customizations.ParentChildGroups = customizations.ParentChildGroups;
             PawnTabViewController.SelectPawn(result.Customizations.ColonyPawns.FirstOrDefault());
+            Messages.Message("EdB.PC.Dialog.Preset.Loaded".Translate(filename), MessageTypeDefOf.TaskCompletion);
         }
 
         public void SavePreset(string filename) {

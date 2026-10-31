@@ -35,6 +35,9 @@ namespace EdB.PrepareCarefully {
 
         public void InitializeStateFromStartingPawns() {
             GameInitData gameInitData = Find.GameInitData;
+            State.OriginalPawnBackup = new PawnEditBackup(gameInitData.startingAndOptionalPawns
+                .Concat(gameInitData.startingAndOptionalPawns.SelectMany(p => p.relations.DirectRelations.Select(r => r.otherPawn)))
+                .Where(p => p != null).Distinct());
             State.ColonyPawnCount = gameInitData.startingPawnCount;
             State.TotalPawnCount = gameInitData.startingAndOptionalPawns.Count;
             State.Customizations.ColonyPawns = new List<CustomizedPawn>();
@@ -291,7 +294,18 @@ namespace EdB.PrepareCarefully {
                 return pawnLoaderResult;
             }
             customizedPawn.Type = pawnType;
-            customizedPawn.Pawn = Customizer.CreatePawnFromCustomizations(customizedPawn.Customizations);
+            try {
+                customizedPawn.Pawn = Customizer.CreatePawnFromCustomizations(customizedPawn.Customizations);
+                MapCustomizationsForPawn(customizedPawn);
+            }
+            catch (Exception e) {
+                if (customizedPawn.Pawn != null) {
+                    DestroyPawn(customizedPawn.Pawn);
+                }
+                Logger.Warning("Could not safely restore the character's pawn state", e);
+                pawnLoaderResult.Pawn = null;
+                return pawnLoaderResult;
+            }
             pawnLoaderResult.Pawn = AddPawnToPawnList(customizedPawn);
 
             return pawnLoaderResult;
@@ -722,48 +736,52 @@ namespace EdB.PrepareCarefully {
             CostAffected?.Invoke();
         }
 
+        private void EditHealth(CustomizedPawn customizedPawn, Action edit) {
+            if (customizedPawn?.Pawn == null || customizedPawn.Customizations == null) {
+                return;
+            }
+            // Health callbacks can also change a bonded/related pawn.
+            var affected = State.Customizations.AllPawns.Select(p => p.Pawn)
+                .Concat(customizedPawn.Pawn.relations.DirectRelations.Select(r => r.otherPawn))
+                .Where(p => p != null).Distinct();
+            var backup = new PawnEditBackup(affected);
+            try {
+                edit();
+            }
+            catch (Exception e) {
+                backup.Restore();
+                Logger.Warning("Health edit failed; restored the pawn checkpoint", e);
+                Messages.Message("EdB.PC.Health.EditFailed".Translate(), MessageTypeDefOf.RejectInput, false);
+            }
+            // Both successful edits and rollback may replace the mapped condition objects.
+            foreach (var pawn in State.Customizations.AllPawns) {
+                PawnToCustomizationsMapper.MapInjuriesAndImplants(pawn.Pawn, pawn.Customizations);
+            }
+            ClearPawnGraphicsCache(customizedPawn.Pawn);
+            CostAffected?.Invoke();
+        }
+
         public void AddPawnInjury(CustomizedPawn customizedPawn, Injury injury) {
-            Pawn pawn = customizedPawn.Pawn;
-            CustomizationsPawn customizations = customizedPawn.Customizations;
-            if (pawn == null || customizations == null) {
-                return;
-            }
-            customizations.Injuries.Add(injury);
-            Customizer.ApplyInjuryAndImplantCustomizationsToPawn(pawn, customizations);
-            PawnToCustomizationsMapper.MapInjuriesAndImplants(pawn, customizations);
-            CostAffected?.Invoke();
+            EditHealth(customizedPawn, () => Customizer.ApplyInjuryToPawn(customizedPawn.Pawn, injury));
         }
+
         public void AddPawnImplant(CustomizedPawn customizedPawn, Implant implant) {
-            Pawn pawn = customizedPawn.Pawn;
-            CustomizationsPawn customizations = customizedPawn.Customizations;
-            if (pawn == null || customizations == null) {
-                return;
-            }
-            customizations.Implants.Add(implant);
-            Customizer.ApplyInjuryAndImplantCustomizationsToPawn(pawn, customizations);
-            PawnToCustomizationsMapper.MapInjuriesAndImplants(pawn, customizations);
-            CostAffected?.Invoke();
+            EditHealth(customizedPawn, () => Customizer.ApplyImplantToPawn(customizedPawn.Pawn, implant));
         }
+
         public void UpdateImplants(CustomizedPawn customizedPawn, IEnumerable<Implant> implants) {
-            Pawn pawn = customizedPawn.Pawn;
-            CustomizationsPawn customizations = customizedPawn.Customizations;
-            if (pawn == null || customizations == null) {
-                return;
-            }
-            List<Implant> implantsToRemove = new List<Implant>();
-            foreach (var existingImplant in customizations.Implants) {
-                var matchingImplant = implants.FirstOrDefault(i => i.Equals(existingImplant));
-                if (matchingImplant == null) {
-                    implantsToRemove.Add(existingImplant);
+            EditHealth(customizedPawn, () => {
+                var selected = implants.ToList();
+                var removed = customizedPawn.Customizations.Implants
+                    .Where(existing => !selected.Any(i => i.Equals(existing))).ToList();
+                RemoveHediffsInternal(customizedPawn, removed.SelectMany(i => HediffsMatchingImplant(customizedPawn, i)));
+                foreach (var implant in selected) {
+                    var existing = customizedPawn.Customizations.Implants.FirstOrDefault(i => i.Equals(implant));
+                    if (existing?.Hediff == null || !customizedPawn.Pawn.health.hediffSet.hediffs.Contains(existing.Hediff)) {
+                        Customizer.ApplyImplantToPawn(customizedPawn.Pawn, implant);
+                    }
                 }
-            }
-            RemoveHediffsInternal(customizedPawn, implantsToRemove.SelectMany(i => HediffsMatchingImplant(customizedPawn, i)));
-            customizations.Implants.Clear();
-            customizations.Implants.AddRange(implants);
-            Customizer.ApplyInjuryAndImplantCustomizationsToPawn(pawn, customizations);
-            PawnToCustomizationsMapper.MapInjuriesAndImplants(pawn, customizations);
-            ClearPawnGraphicsCache(pawn);
-            CostAffected?.Invoke();
+            });
         }
 
         public IEnumerable<Hediff> HediffsMatchingImplant(CustomizedPawn customizedPawn, Implant implant) {
@@ -776,7 +794,7 @@ namespace EdB.PrepareCarefully {
                 return Enumerable.Empty<Hediff>();
             }
 
-            return pawn.health.hediffSet.hediffs.Where(h => h?.def == implant?.Option?.HediffDef && h?.Part == implant?.BodyPartRecord);
+            return pawn.health.hediffSet.hediffs.Where(h => h?.def == (implant.HediffDef ?? implant.Recipe?.addsHediff ?? implant.Option?.HediffDef) && h?.Part == implant.BodyPartRecord);
         }
 
         private void RemoveHediffsInternal(CustomizedPawn customizedPawn, IEnumerable<Hediff> hediffs) {
@@ -793,17 +811,7 @@ namespace EdB.PrepareCarefully {
         }
 
         public void RemoveHediffs(CustomizedPawn customizedPawn, IEnumerable<Hediff> hediffs) {
-            Pawn pawn = customizedPawn?.Pawn;
-            CustomizationsPawn customizations = customizedPawn?.Customizations;
-            if (pawn == null || customizations == null) {
-                return;
-            }
-            RemoveHediffsInternal(customizedPawn, hediffs);
-            RemoveHediffsWithUnsatisfiedDependencies(customizedPawn);
-            Customizer.ApplyInjuryAndImplantCustomizationsToPawn(pawn, customizations);
-            PawnToCustomizationsMapper.MapInjuriesAndImplants(pawn, customizations);
-            ClearPawnGraphicsCache(pawn);
-            CostAffected?.Invoke();
+            EditHealth(customizedPawn, () => RemoveHediffsInternal(customizedPawn, hediffs));
         }
 
         protected void RemoveHediff(CustomizedPawn customizedPawn, Hediff hediff) {
@@ -1242,7 +1250,11 @@ namespace EdB.PrepareCarefully {
         }
 
         public void MapCustomizationsForPawn(CustomizedPawn customizedPawn) {
+            var possessions = customizedPawn.Customizations?.Possessions;
             customizedPawn.Customizations = PawnToCustomizationsMapper.Map(customizedPawn.Pawn);
+            if (possessions != null) {
+                customizedPawn.Customizations.Possessions = possessions;
+            }
         }
 
         public bool SavePawn(CustomizedPawn customizedPawn, string filename) {
