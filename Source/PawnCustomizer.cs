@@ -15,7 +15,13 @@ namespace EdB.PrepareCarefully {
             //foreach (var g in pawn.genes.Xenogenes) {
             //    Logger.Debug("  Pawn has xenogene: " + g.def.defName);
             //}
-            ApplyAllCustomizationsToPawn(pawn, customizations);
+            try {
+                ApplyAllCustomizationsToPawn(pawn, customizations);
+            }
+            catch {
+                UtilityPawns.DestroyPawn(pawn);
+                throw;
+            }
             return pawn;
         }
 
@@ -380,33 +386,30 @@ namespace EdB.PrepareCarefully {
         }
 
         public void ApplyInjuryAndImplantCustomizationsToPawn(Pawn pawn, CustomizationsPawn customizations) {
-            pawn.health.Reset();
-            List<Injury> injuriesToRemove = new List<Injury>();
+            if (customizations.HealthState != null) {
+                customizations.HealthState.Apply(pawn);
+                customizations.HealthState = null;
+                return;
+            }
+            // Retain existing objects (and their comp data, targets, timers and links).
+            // Removal is explicit in ManagerPawns and goes through RemoveHediff.
             foreach (var injury in customizations.Injuries) {
-                try {
-                    ApplyInjuryToPawn(pawn, injury);
+                if (injury.Hediff != null && injury.Hediff.pawn == pawn) {
+                    if (!pawn.health.hediffSet.hediffs.Contains(injury.Hediff)) {
+                        throw new InvalidOperationException("An existing injury was removed by another health edit");
+                    }
+                    continue;
                 }
-                catch (Exception e) {
-                    Logger.Warning("Failed to add injury {" + injury.Option?.HediffDef?.defName + "} to part {" + injury.BodyPartRecord?.def?.defName + "}", e);
-                    injuriesToRemove.Add(injury);
-                }
+                ApplyInjuryToPawn(pawn, injury);
             }
-            foreach (var injury in injuriesToRemove) {
-                Logger.Debug("Removing injury: " + injury.Option?.HediffDef?.defName);
-                customizations.Injuries.Remove(injury);
-            }
-            List<Implant> implantsToRemove = new List<Implant>();
             foreach (var implant in customizations.Implants) {
-                try {
-                    ApplyImplantToPawn(pawn, implant);
+                if (implant.Hediff != null && implant.Hediff.pawn == pawn) {
+                    if (!pawn.health.hediffSet.hediffs.Contains(implant.Hediff)) {
+                        throw new InvalidOperationException("An existing implant was removed by another health edit");
+                    }
+                    continue;
                 }
-                catch (Exception e) {
-                    Logger.Warning("Failed to add implant {" + implant.Label + "} to part {" + implant.BodyPartRecord?.def?.defName + "}", e);
-                    implantsToRemove.Add(implant);
-                }
-            }
-            foreach (var implant in implantsToRemove) {
-                customizations.Implants.Remove(implant);
+                ApplyImplantToPawn(pawn, implant);
             }
         }
 
@@ -449,9 +452,7 @@ namespace EdB.PrepareCarefully {
                 return;
             }
             //Logger.Debug("Adding implant to pawn, recipe = " + implant.Recipe?.defName + ", hediff = " + implant.HediffDef?.defName + ", bodyPart = " + implant.BodyPartRecord?.def?.defName);
-            if (implant.BodyPartRecord == null) {
-                Logger.Warning("Could not add implant to pawn because no BodyPartRecord is defined");
-            }
+            ValidateHealthPart(pawn, implant.BodyPartRecord);
             if (implant.Recipe != null) {
                 implant.Hediff = HediffMaker.MakeHediff(implant.Recipe.addsHediff, pawn, implant.BodyPartRecord);
                 if (implant.Severity > 0) {
@@ -473,12 +474,13 @@ namespace EdB.PrepareCarefully {
                 implant.Hediff = hediff;
             }
             else {
-                Logger.Warning("Could not add implant to pawn because no RecipeDef or HediffDef is defined");
+                throw new InvalidOperationException("Could not add implant without a RecipeDef or HediffDef");
             }
         }
 
 
         public void ApplyInjuryToPawn(Pawn pawn, Injury injury) {
+            ValidateHealthPart(pawn, injury.BodyPartRecord);
             if (injury.Option.Giver != null) {
                 //Logger.Debug("Adding injury {" + Option.Label + "} to part {" + BodyPartRecord?.LabelCap + "} using giver {" + Option.Giver.GetType().FullName + "}");
                 Hediff hediff = HediffMaker.MakeHediff(injury.Option.HediffDef, pawn, injury.BodyPartRecord);
@@ -538,6 +540,12 @@ namespace EdB.PrepareCarefully {
                 }
                 pawn.health.AddHediff(hediff);
                 injury.Hediff = hediff;
+            }
+        }
+
+        private static void ValidateHealthPart(Pawn pawn, BodyPartRecord part) {
+            if (part != null && !pawn.RaceProps.body.AllParts.Contains(part)) {
+                throw new InvalidOperationException("The selected health condition belongs to a different body");
             }
         }
 

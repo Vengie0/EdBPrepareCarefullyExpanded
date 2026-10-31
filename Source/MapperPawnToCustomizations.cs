@@ -272,6 +272,7 @@ namespace EdB.PrepareCarefully {
                             BodyPartRecord = bodyPartRecord,
                             Hediff = hediff,
                             HediffDef = hediffDef,
+                            Severity = hediff.Severity,
                         };
                         if (hediff is Hediff_Level level) {
                             //Logger.Debug("Mapping implant " + implantOption.HediffDef.defName + " with severity " + level.level);

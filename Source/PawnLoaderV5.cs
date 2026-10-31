@@ -603,110 +603,120 @@ namespace EdB.PrepareCarefully {
                 }
             }
 
-            var healthOptions = ProviderHealthOptions.GetOptions(customizations.PawnKind.race);
-            if (healthOptions == null) {
-                Logger.Debug("No health options found for pawn: " + customizations.PawnKind.race?.defName);
-            }
-
-            for (int i = 0; i < record.implants.Count; i++) {
-                SaveRecordImplantV5 implantRecord = record.implants[i];
-
-                UniqueBodyPart uniqueBodyPart = healthOptions.FindBodyPartByName(implantRecord.bodyPart, implantRecord.bodyPartIndex != null ? implantRecord.bodyPartIndex.Value : 0);
-                if (uniqueBodyPart == null) {
-                    uniqueBodyPart = FindReplacementBodyPart(healthOptions, implantRecord.bodyPart);
+            customizations.HealthState = record.healthState;
+            if (record.healthState == null) {
+                var healthOptions = ProviderHealthOptions.GetOptions(customizations.PawnKind.race);
+                if (healthOptions == null) {
+                    Logger.Debug("No health options found for pawn: " + customizations.PawnKind.race?.defName);
                 }
-                if (uniqueBodyPart == null) {
-                    result.AddWarning("Could not add the implant because it could not find the needed body part \"" + implantRecord.bodyPart + "\""
-                        + (implantRecord.bodyPartIndex != null ? " with index " + implantRecord.bodyPartIndex : ""));
-                    continue;
-                }
-                BodyPartRecord bodyPart = uniqueBodyPart.Record;
-                if (implantRecord.recipe != null) {
-                    RecipeDef recipeDef = FindRecipeDef(implantRecord.recipe);
-                    if (recipeDef == null) {
-                        result.AddWarning("Could not add the implant because it could not find the recipe definition \"" + implantRecord.recipe + "\"");
+
+                for (int i = 0; i < record.implants.Count; i++) {
+                    SaveRecordImplantV5 implantRecord = record.implants[i];
+
+                    UniqueBodyPart uniqueBodyPart = implantRecord.bodyPart == null ? null : healthOptions.FindBodyPartByName(implantRecord.bodyPart, implantRecord.bodyPartIndex != null ? implantRecord.bodyPartIndex.Value : 0);
+                    if (uniqueBodyPart == null && implantRecord.bodyPart != null) {
+                        uniqueBodyPart = FindReplacementBodyPart(healthOptions, implantRecord.bodyPart);
+                    }
+                    if (uniqueBodyPart == null && implantRecord.bodyPart != null) {
+                        result.AddWarning("Could not add the implant because it could not find the needed body part \"" + implantRecord.bodyPart + "\""
+                            + (implantRecord.bodyPartIndex != null ? " with index " + implantRecord.bodyPartIndex : ""));
                         continue;
                     }
-                    ImplantOption implantOption = healthOptions.FindImplantOptionThatAddsRecipeDefToBodyPart(recipeDef, bodyPart?.def);
-                    if (implantOption != null) {
-                        Implant implant = new Implant() {
-                            Option = implantOption,
-                            BodyPartRecord = bodyPart,
-                            Recipe = recipeDef,
-                            HediffDef = recipeDef.addsHediff,
-                        };
-                        customizations.Implants.Add(implant);
-                        Logger.Debug("Added implant customizations " + recipeDef?.defName);
+                    BodyPartRecord bodyPart = uniqueBodyPart?.Record;
+                    if (implantRecord.recipe != null) {
+                        RecipeDef recipeDef = FindRecipeDef(implantRecord.recipe);
+                        if (recipeDef == null) {
+                            result.AddWarning("Could not add the implant because it could not find the recipe definition \"" + implantRecord.recipe + "\"");
+                            continue;
+                        }
+                        ImplantOption implantOption = healthOptions.FindImplantOptionThatAddsRecipeDefToBodyPart(recipeDef, bodyPart?.def);
+                        if (implantOption != null) {
+                            Implant implant = new Implant() {
+                                Option = implantOption,
+                                BodyPartRecord = bodyPart,
+                                Recipe = recipeDef,
+                                HediffDef = recipeDef.addsHediff,
+                                Severity = implantRecord.severity,
+                            };
+                            customizations.Implants.Add(implant);
+                            Logger.Debug("Added implant customizations " + recipeDef?.defName);
+                        }
+                        else {
+                            result.AddWarning("Could not add implant to pawn because no matching option was found for specified RecipeDef {" + implantRecord.recipe + "} and BodyPartDef {" + bodyPart?.def?.defName + "}");
+                        }
                     }
-                    else {
-                        result.AddWarning("Could not add implant to pawn because no matching option was found for specified RecipeDef {" + implantRecord.recipe + "} and BodyPartDef {" + bodyPart?.def?.defName + "}");
+                    else if (implantRecord.hediffDef != null) {
+                        HediffDef hediffDef = DefDatabase<HediffDef>.GetNamedSilentFail(implantRecord.hediffDef);
+                        if (hediffDef != null) {
+                            ImplantOption implantOption = healthOptions.FindImplantOptionThatAddsHediffDefToBodyPart(hediffDef, bodyPart?.def);
+                            if (implantOption == null) {
+                                result.AddWarning("Skipped legacy condition " + hediffDef.defName
+                                    + " because the preset contains no complete state or supported implant option for it");
+                                continue;
+                            }
+                            Implant implant = new Implant() {
+                                Option = implantOption,
+                                BodyPartRecord = bodyPart,
+                                HediffDef = hediffDef,
+                                Severity = implantRecord.severity,
+                            };
+                            customizations.Implants.Add(implant);
+                        }
+                        else {
+                            result.AddWarning("Could not add implant to pawn because the specified HediffDef {" + implantRecord.hediffDef + "} for the implant was not found");
+                        }
                     }
                 }
-                else if (implantRecord.hediffDef != null) {
-                    HediffDef hediffDef = DefDatabase<HediffDef>.GetNamedSilentFail(implantRecord.hediffDef);
-                    if (hediffDef != null) {
-                        ImplantOption implantOption = healthOptions.FindImplantOptionThatAddsHediffDefToBodyPart(hediffDef, bodyPart?.def);
-                        Implant implant = new Implant() {
-                            Option = implantOption,
-                            BodyPartRecord = bodyPart,
-                            HediffDef = hediffDef,
-                            Severity = implantRecord.severity,
-                        };
-                        customizations.Implants.Add(implant);
-                    }
-                    else {
-                        result.AddWarning("Could not add implant to pawn because the specified HediffDef {" + implantRecord.hediffDef + "} for the implant was not found");
-                    }
-                }
-            }
 
-            foreach (var injuryRecord in record.injuries) {
-                HediffDef def = DefDatabase<HediffDef>.GetNamedSilentFail(injuryRecord.hediffDef);
-                if (def == null) {
-                    result.AddWarning("Could not add the injury because it could not find the hediff definition \"" + injuryRecord.hediffDef + "\"");
-                    continue;
-                }
-                InjuryOption option = healthOptions.FindInjuryOptionByHediffDef(def);
-                if (option == null) {
-                    result.AddWarning("Could not add the injury because it could not find a matching injury option for the saved hediff \"" + injuryRecord.hediffDef + "\"");
-                    continue;
-                }
+                foreach (var injuryRecord in record.injuries) {
+                    HediffDef def = DefDatabase<HediffDef>.GetNamedSilentFail(injuryRecord.hediffDef);
+                    if (def == null) {
+                        result.AddWarning("Could not add the injury because it could not find the hediff definition \"" + injuryRecord.hediffDef + "\"");
+                        continue;
+                    }
+                    InjuryOption option = healthOptions.FindInjuryOptionByHediffDef(def);
+                    if (option == null) {
+                        result.AddWarning("Could not add the injury because it could not find a matching injury option for the saved hediff \"" + injuryRecord.hediffDef + "\"");
+                        continue;
+                    }
                 
-                BodyPartRecord bodyPart = null;
-                if (injuryRecord.bodyPart != null) {
-                    UniqueBodyPart uniquePart = healthOptions.FindBodyPartByName(injuryRecord.bodyPart,
-                        injuryRecord.bodyPartIndex != null ? injuryRecord.bodyPartIndex.Value : 0);
-                    if (uniquePart == null) {
-                        uniquePart = FindReplacementBodyPart(healthOptions, injuryRecord.bodyPart);
+                    BodyPartRecord bodyPart = null;
+                    if (injuryRecord.bodyPart != null) {
+                        UniqueBodyPart uniquePart = healthOptions.FindBodyPartByName(injuryRecord.bodyPart,
+                            injuryRecord.bodyPartIndex != null ? injuryRecord.bodyPartIndex.Value : 0);
+                        if (uniquePart == null) {
+                            uniquePart = FindReplacementBodyPart(healthOptions, injuryRecord.bodyPart);
+                        }
+                        if (uniquePart == null) {
+                            result.AddWarning("Could not add the injury because it could not find the needed body part \"" + injuryRecord.bodyPart + "\""
+                                + (injuryRecord.bodyPartIndex != null ? " with index " + injuryRecord.bodyPartIndex : ""));
+                            continue;
+                        }
+                        bodyPart = uniquePart.Record;
                     }
-                    if (uniquePart == null) {
-                        result.AddWarning("Could not add the injury because it could not find the needed body part \"" + injuryRecord.bodyPart + "\""
-                            + (injuryRecord.bodyPartIndex != null ? " with index " + injuryRecord.bodyPartIndex : ""));
-                        continue;
-                    }
-                    bodyPart = uniquePart.Record;
-                }
-                bool isValid = true;
-                Injury injury = new Injury();
-                injury.Option = option;
-                injury.BodyPartRecord = bodyPart;
+                    bool isValid = true;
+                    Injury injury = new Injury();
+                    injury.Option = option;
+                    injury.BodyPartRecord = bodyPart;
      
-                if (injuryRecord.severity != null) {
-                    injury.Severity = injuryRecord.Severity;
-                }
-                if (injuryRecord.painFactor != null) {
-                    injury.PainFactor = injuryRecord.PainFactor;
-                }
-                if (injuryRecord.chemical != null) {
-                    injury.Chemical = DefDatabase<ChemicalDef>.GetNamedSilentFail(injuryRecord.chemical);
-                    if (injury.Chemical == null) {
-                        Logger.Debug("Could not load injury from saved pawn.  Chemical definition (" + injuryRecord.chemical + ") was not found");
-                        isValid = false;
+                    if (injuryRecord.severity != null) {
+                        injury.Severity = injuryRecord.Severity;
+                    }
+                    if (injuryRecord.painFactor != null) {
+                        injury.PainFactor = injuryRecord.PainFactor;
+                    }
+                    if (injuryRecord.chemical != null) {
+                        injury.Chemical = DefDatabase<ChemicalDef>.GetNamedSilentFail(injuryRecord.chemical);
+                        if (injury.Chemical == null) {
+                            Logger.Debug("Could not load injury from saved pawn.  Chemical definition (" + injuryRecord.chemical + ") was not found");
+                            isValid = false;
+                        }
+                    }
+                    if (isValid) {
+                        customizations.Injuries.Add(injury);
                     }
                 }
-                if (isValid) {
-                    customizations.Injuries.Add(injury);
-                }
+
             }
 
             // Ideoligion Certainty

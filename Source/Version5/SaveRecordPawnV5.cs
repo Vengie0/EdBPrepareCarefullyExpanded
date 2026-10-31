@@ -50,6 +50,7 @@ namespace EdB.PrepareCarefully {
         public bool randomRelations = false;
         public List<SaveRecordImplantV5> implants = new List<SaveRecordImplantV5>();
         public List<SaveRecordInjuryV5> injuries = new List<SaveRecordInjuryV5>();
+        public PresetHealthState healthState;
         public SaveRecordIdeoV5 ideo;
         public List<string> abilities = new List<string>();
         public string compsXml = null;
@@ -71,6 +72,7 @@ namespace EdB.PrepareCarefully {
         }
 
         public void ExposeData() {
+            Scribe_Deep.Look(ref healthState, "healthState");
             Scribe_Values.Look<string>(ref this.id, "id", null, false);
             Scribe_Values.Look<string>(ref this.type, "type", null, false);
             Scribe_Deep.Look<SaveRecordFactionV4>(ref this.faction, "faction");

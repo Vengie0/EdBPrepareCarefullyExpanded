@@ -57,6 +57,7 @@ namespace EdB.PrepareCarefully {
         public SaveRecordPawnV5 ConvertCustomizedPawnToSaveRecord(CustomizedPawn customizedPawn) {
             CustomizationsPawn customizations = customizedPawn.Customizations;
             SaveRecordPawnV5 result = new SaveRecordPawnV5();
+            result.healthState = PresetHealthState.Capture(customizedPawn.Pawn);
             result.id = customizedPawn.Id ?? Guid.NewGuid().ToString();
             result.originalFactionDef = customizedPawn.OriginalFactionDef?.defName;
             result.thingDef = customizedPawn.Pawn.def.defName;

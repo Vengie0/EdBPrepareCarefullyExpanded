@@ -25,6 +25,7 @@ namespace EdB.PrepareCarefully {
         public Dictionary<CustomizedPawn, Dictionary<SkillDef, int>> CachedSkillGains { get; set; } = new Dictionary<CustomizedPawn, Dictionary<SkillDef, int>>();
 
         public Dictionary<Pawn, CustomizationsPawn> OriginalPawnCustomizations;
+        public PawnEditBackup OriginalPawnBackup { get; set; }
 
     }
 }
